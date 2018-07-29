@@ -8,6 +8,7 @@
 import Foundation
 import Alamofire
 import ObjectMapper
+import KeychainAccess
 
 /// Diffrerent error codes
 ///
@@ -81,8 +82,7 @@ public class WebService {
 
                 if let model = type.responseModel(responseJSON!) {
                     if model.errors.first?.code == ErrorCode.invalidAccessToken.rawValue {
-                        self.updateAccessToken(type,
-                                               completion: callback)
+                        //TODO: Update Token
                     } else {
                         callback(model)
                     }
@@ -104,41 +104,19 @@ public class WebService {
         }
     }
 
-    /// Access Token updates service. Get saved referesh token and generate a new access token
-    ///
-    /// - Parameters:
-    ///   - type: request type conforming RequestTypeProtocol
-    ///   - completion: Response model object with success/error details
-    private func updateAccessToken(_ type: RequestTypeProtocol,
-                                   completion: @escaping (_ response: Response) -> Void ) {
-        if let refreshToken = Utils.retrieveRefreshToken() {
-            request(type: AuthenticatonRequestType.updateAccessToken(refreshToken: refreshToken),
-                    completion: { (response) in
-                        if response.status == ResponseStatus.success {
-                            self.request(type: type,
-                                         completion: completion)
-                        } else {
-                            completion(Response.error(type: .invaildAuthToken))
-                        }})
-        } else {
-            completion(Response.error(type: .invaildAuthToken))
-        }
-    }
-
     /// Generate a request header with Language and Authentication details
     ///
     /// - Parameter type: request type conforming RequestTypeProtocol
     /// - Returns: header details as HTTPHeaders
     func getRequestHeader(for type: RequestTypeProtocol) -> HTTPHeaders {
-        var header = ["Language-preference" : Utils.languageCode()]
-        let userLoggedIn = UserDefaults.standard.bool(forKey:
-            Constants.UserDefaultsKey.isUserLoggedIn)
-        if type.isAuthRequired(), let token = Utils.retrieveAccessToken(), userLoggedIn {
-            header["Authorization"] = "Bearer \(token)"
+        let header = ["Language-preference" : "Language".localized]
+        //TODO: Add service name and token
+        if type.isAuthRequired() {
+//            header["Authorization"] = "Bearer \(token)"
         }
         return header
     }
-
+    
     /// Validate upload service response
     ///
     /// - Parameters:
@@ -155,8 +133,7 @@ public class WebService {
                             options: []) as? [String : Any] {
                 if let model = type.responseModel(responseJSON!) {
                     if model.errors.first?.code == ErrorCode.invalidAccessToken.rawValue {
-                        self.updateAccessToken(type,
-                                               completion: completion)
+                        //TODO: Token renew
                     } else {
                         completion(model)
                     }
@@ -187,8 +164,7 @@ public class WebService {
         if let baseURL = UserDefaults.standard.string(forKey: "server_URL") {
             return baseURL
         } else {
-            return Utils.getBaseURL()
-
+            return Constants.baseURL
         }
     }
 

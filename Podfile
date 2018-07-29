@@ -13,4 +13,7 @@ target 'My Movies' do
   pod 'FacebookCore'
   pod 'FacebookLogin'
   pod 'TPKeyboardAvoiding'
+  pod 'Fabric'
+  pod 'Crashlytics'
+  pod 'KeychainAccess'
 end
